@@ -101,14 +101,9 @@ extern int aotomSetBrightness(int level);
 extern int aotomGetVersion();
 extern void flashLED(int led, int ms);
 
-/* Globals */
 static int rtc_offset = 3600;
 static u32 wakeup_time = 0;
 static int progress = 0;
-static int progress_done = 0;
-static u32 led0_pattern = 0;
-static u32 led1_pattern = 0;
-static int led_pattern_speed = 20;
 
 static int vfd_write(struct file *file, const char __user *buf,
                            unsigned long count, void *data)

@@ -87,17 +87,14 @@ static struct platform_device *rtc_pdev;
 
 extern YWPANEL_Version_t panel_version;
 
-/****************************************************************************/
-
-static int VFD_Show_Time(u8 hh, u8 mm, u8 ss)
+static int VFD_Show_Time(u8 hh, u8 mm)
 {
-	if ((hh > 24) || (mm > 59) || (ss > 59))
+	if ((hh > 24) || (mm > 59))
 	{
-		dprintk(2, "%s Bad parameter!\n", __func__);
+		dprintk(2, "%s bad parameter!\n", __func__);
 		return -1;
 	}
-
-	return YWPANEL_FP_SetTime((hh * 3600) + (mm * 60) + ss);
+	return YWPANEL_FP_SetTime(hh * 3600 + mm * 60);
 }
 
 static int VFD_Show_Icon(int which, int on)
@@ -1127,7 +1124,7 @@ module_param(paramDebug, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(paramDebug, "Debug Output 0=disabled >0=enabled(debuglevel)");
 
 module_param(gmt, charp, 0);
-MODULE_PARM_DESC(gmt, "GMT offset (default +0000");
+MODULE_PARM_DESC(gmt, "gmt offset (default +0000");
 
 MODULE_DESCRIPTION("VFD module for fulan boxes");
 MODULE_AUTHOR("Spider-Team, oSaoYa");
