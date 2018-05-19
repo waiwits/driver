@@ -206,6 +206,12 @@
  *  |           --------- dst_width   |
  *  |           |                     |
  *  |           --------- dst_height /
+ *  |
+ *  ---------- ir
+ *  |           |
+ *  |           --------- rc
+ *  |                      |
+ *  |                      --------- type <- Type number of remote control in use
  *
  */
 
@@ -329,6 +335,66 @@ static int info_model_read(char *page, char **start, off_t off, int count, int *
 	int len = sprintf(page, "unknown\n");
 #endif
 	return len;
+}
+
+static char *rc_type = NULL;
+
+static int info_rctype_read (char *page, char **start, off_t off, int count, int *eof, void *data)
+{
+	int len = 0;
+
+	if (rc_type == NULL)
+	{
+		len = sprintf(page, "0\n");
+	}
+	else
+	{
+		len = sprintf(page, rc_type);
+	}
+	return len;
+}
+
+int info_rctype_write(struct file *file, const char __user *buf, unsigned long count, void *data)
+{
+	char *page;
+	ssize_t ret = -ENOMEM;
+
+	char *myString = kmalloc(count + 1, GFP_KERNEL);
+#ifdef VERY_VERBOSE
+	printk("%s %ld - ", __FUNCTION__, count);
+#endif
+	page = (char *)__get_free_page(GFP_KERNEL);
+
+	if (page)
+	{
+		ret = -EFAULT;
+
+		if (copy_from_user(page, buf, count))
+		{
+			goto out;
+		}
+		strncpy(myString, page, count);
+		myString[count] = '\0';
+#ifdef VERY_VERBOSE
+		printk("%s\n", myString);
+#endif
+		if (rc_type != NULL)
+		{
+			kfree(rc_type);
+		}
+		rc_type = myString;
+
+		/* always return count to avoid endless loop */
+		ret = count;
+	}
+out:
+	free_page((unsigned long)page);
+
+	if (rc_type != myString)
+	{
+		kfree(myString);
+	}
+	return ret;
 }
 
 static int info_chipset_read(char *page, char **start, off_t off, int count, int *eof, void *data)
@@ -619,6 +685,10 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/info/chipset"                                                 , NULL, info_chipset_read, NULL, NULL, ""},
 	{cProcEntry, "stb/info/boxtype"                                                 , NULL, info_model_read, NULL, NULL, ""},
 
+	{cProcDir  , "stb/ir"                                                           , NULL, NULL, NULL, NULL, ""},
+	{cProcDir  , "stb/ir/rc"                                                        , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/ir/rc/type"                                                   , NULL, info_rctype_read, info_rctype_write, NULL, ""},
+
 	{cProcDir  , "stb/video"                                                        , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/video/alpha"                                                  , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/video/aspect"                                                 , NULL, NULL, NULL, NULL, ""},
@@ -663,16 +733,45 @@ struct ProcStructure_s e2Proc[] =
 	{cProcEntry, "stb/fb/znorm"                                                     , NULL, NULL, default_write_proc, NULL, ""},
 
 	{cProcDir  , "stb/fp"                                                           , NULL, NULL, NULL, NULL, ""},
-	{cProcEntry, "stb/fp/lnb_sense1"                                                , NULL, NULL, NULL, NULL, ""},
-	{cProcEntry, "stb/fp/lnb_sense2"                                                , NULL, NULL, NULL, NULL, ""},
+//	{cProcEntry, "stb/fp/lnb_sense1"                                                , NULL, NULL, NULL, NULL, ""},
+//	{cProcEntry, "stb/fp/lnb_sense2"                                                , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/fp/led0_pattern"                                              , NULL, NULL, default_write_proc, NULL, ""},
+	{cProcEntry, "stb/fp/led1_pattern"                                              , NULL, NULL, default_write_proc, NULL, ""},
 	{cProcEntry, "stb/fp/led_pattern_speed"                                         , NULL, NULL, default_write_proc, NULL, ""},
+	{cProcEntry, "stb/fp/oled_brightness"                                           , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/fp/rtc"                                                       , NULL, zero_read, default_write_proc, NULL, ""},
+	{cProcEntry, "stb/fp/rtc_offset"                                                , NULL, zero_read, default_write_proc, NULL, ""},
+	{cProcEntry, "stb/fp/text"                                                      , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/fp/version"                                                   , NULL, zero_read, NULL, NULL, ""},
 	{cProcEntry, "stb/fp/wakeup_time"                                               , NULL, wakeup_time_read, wakeup_time_write, NULL, ""},
 	{cProcEntry, "stb/fp/was_timer_wakeup"                                          , NULL, NULL, NULL, NULL, ""},
-	{cProcEntry, "stb/fp/rtc"                                                       , NULL, zero_read, default_write_proc, NULL, ""},
 
-	{cProcDir  , "stb/tsmux"                                                        , NULL, NULL, NULL, NULL, ""},
+#if defined(FORTIS_HDBOX) \
+ || defined(OCTAGON1008) \
+ || defined(ATEVIO7500) \
+ || defined(HS7110) \
+ || defined(HS7119) \
+ || defined(HS7420) \
+ || defined(HS7429) \
+ || defined(HS7810A) \
+ || defined(HS7819)
+	{cProcEntry, "stb/fp/resellerID"                                                , NULL, NULL, NULL, NULL, ""},
+#endif
+
+#if defined(SPARK) \
+ || defined(SPARK7162)
+	{cProcEntry, "stb/fp/aotom"                                                     , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/fp/displaytype"                                               , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/fp/timemode"                                                  , NULL, NULL, NULL, NULL, ""},
+
+//	{cProcEntry, "vfd"                                                              , NULL, NULL, NULL, NULL, ""},
+//	{cProcDir  , "stb/vfd"                                                          , NULL, NULL, NULL, NULL, ""},
+
+	{cProcDir  , "stb/power"                                                        , NULL, NULL, NULL, NULL, ""},
+	{cProcEntry, "stb/power/standbyled"                                             , NULL, NULL, NULL, NULL, ""},
+#endif
+
+   	{cProcDir  , "stb/tsmux"                                                        , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/tsmux/input0"                                                 , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/tsmux/input1"                                                 , NULL, NULL, NULL, NULL, ""},
 	{cProcEntry, "stb/tsmux/ci0_input"                                              , NULL, NULL, NULL, NULL, ""},
