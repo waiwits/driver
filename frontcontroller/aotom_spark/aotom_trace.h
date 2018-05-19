@@ -14,9 +14,7 @@ enum ywtrace_level_e
 };
 
 int YWTRACE_Init(void);
-int YWTRACE_Print(const unsigned int level, const char * format, ...);
-
-#define __TRACE__           1
+int YWTRACE_Print(const unsigned int level, const char *format, ...);
 
 #ifdef __TRACE__
 #define ywtrace_init        YWTRACE_Init
@@ -26,7 +24,7 @@ int YWTRACE_Print(const unsigned int level, const char * format, ...);
 #define ywtrace_print(x...) do{} while(0)
 #endif
 
-//#define YW_PANEL_DEBUG 1
+#define YW_PANEL_DEBUG
 
 #ifdef YW_PANEL_DEBUG
 #define PANEL_DEBUG(x)  ywtrace_print(TRACE_ERROR,"%s() error at line: %d in file:%s ^!^\n",__FUNCTION__, __LINE__, __FILE__)
