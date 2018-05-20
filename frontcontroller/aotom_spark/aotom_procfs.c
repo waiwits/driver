@@ -101,7 +101,7 @@ extern int aotomSetBrightness(int level);
 extern int aotomGetVersion();
 extern void flashLED(int led, int ms);
 
-static int rtc_offset = 3600;
+static int rtc_offset = 0;
 static u32 wakeup_time = 0;
 static int progress = 0;
 
